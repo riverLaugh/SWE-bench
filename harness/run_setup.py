@@ -211,6 +211,24 @@ def collect_test_exec_cmd(repo_full: str, task_instance: Dict) -> str:
     test_cmd = f"{test_type} {' '.join(test_directives)}"
     return test_cmd
 
+def setup_one_repo_version_docker(
+    repo_full: str, repo_path: str, version: str, env_name: str, task: Dict
+):
+    logger.info(
+        f"[{env_name}] ======= Start setting up for {repo_full} {version} ======="
+    )
+    create_docker_image(repo_full, version, env_name, task)
+
+    logger.info(
+        f"[{env_name}] Created conda environment {env_name} for {repo_full} {version}"
+    )
+    pass
+
+def create_docker_image(
+    repo_full: str, version: str, env_name: str, task: Dict
+):
+    
+    pass
 
 def setup_one_repo_version(
     repo_full: str, repo_path: str, version: str, env_name: str, task: Dict
@@ -257,11 +275,11 @@ def load_task_instances(swe_bench_tasks: str):
         t["pr_link"] = pr_link
     # fields that are supposed to be list, are encoded as string in parquet
     # fix them here
-    for t in tasks:
-        fail_to_pass = t["FAIL_TO_PASS"]
-        t["FAIL_TO_PASS"] = json.loads(fail_to_pass)
-        pass_to_pass = t["PASS_TO_PASS"]
-        t["PASS_TO_PASS"] = json.loads(pass_to_pass)
+    # for t in tasks:
+    #     fail_to_pass = t["FAIL_TO_PASS"]
+    #     t["FAIL_TO_PASS"] = json.loads(fail_to_pass)
+    #     pass_to_pass = t["PASS_TO_PASS"]
+    #     t["PASS_TO_PASS"] = json.loads(pass_to_pass)
     return tasks
     # this is for the json version, which is deprecated
     # if not os.path.exists(swe_bench_tasks):
@@ -340,16 +358,19 @@ def main(
         repo_short = instance_id.rsplit("-", 1)[0]  # "astropy"
         version = task["version"]  # "4.2"
         # name for both conda env and testbed folder
+        docker_image = f"sweb.eval.x86_64.{instance_id.lower()}:latest"
         env_name = f"setup_{repo_short}__{version}"
         repo_path = pjoin(testbed, repo_short, env_name)
-        pre_install_cmds, install_cmd = collect_install_instructions(repo_full, version)
-        test_cmd = collect_test_exec_cmd(repo_full, task)
+        # pre_install_cmds, install_cmd = collect_install_instructions(repo_full, version)
+        # test_cmd = collect_test_exec_cmd(repo_full, task)
+        # test_cmd
         # keys in setup_map
         setup_map[instance_id]["repo_path"] = repo_path
         setup_map[instance_id]["env_name"] = env_name
-        setup_map[instance_id]["pre_install"] = pre_install_cmds
-        setup_map[instance_id]["install"] = install_cmd
-        setup_map[instance_id]["test_cmd"] = test_cmd
+        setup_map[instance_id]["docker_image"] = docker_image
+        # setup_map[instance_id]["pre_install"] = pre_install_cmds
+        # setup_map[instance_id]["install"] = install_cmd
+        # setup_map[instance_id]["test_cmd"] = test_cmd
         collected_entry_env_names = [e[3] for e in setup_entries]
         if env_name in collected_entry_env_names:
             # this repo+version combination has been recorded before
@@ -396,7 +417,7 @@ if __name__ == "__main__":
     root_dir = os.path.dirname(script_dir)
     # we always read from this file, so put this as a default instead of required
     default_tasks_file = pjoin(
-        root_dir, "data", "test-00000-of-00001-dc7762b94638c186.parquet"
+        root_dir, "data", "train-00000-of-00001.parquet"
     )
 
     parser = argparse.ArgumentParser()
