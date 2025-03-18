@@ -248,10 +248,11 @@ def setup_one_repo_version(
     )
     clone_repo(repo_full, repo_path)
     logger.info(f"[{env_name}] Cloned {repo_full} to {repo_path}")
-    create_conda_env(repo_full, version, repo_path, env_name, task)
-    logger.info(
-        f"[{env_name}] Created conda environment {env_name} for {repo_full} {version}"
-    )
+    # create_conda_env(repo_full, version, repo_path, env_name, task)
+    # todo：检查docker是否存在，不存在则创建
+    # logger.info(
+    #     f"[{env_name}] Created conda environment {env_name} for {repo_full} {version}"
+    # )
     # "install" and "pre_install" steps are per task;
     # we don't do them here, but instead collects the commands and write them out;
     # this has already been done at a previous step
@@ -368,6 +369,9 @@ def main(
         setup_map[instance_id]["repo_path"] = repo_path
         setup_map[instance_id]["env_name"] = env_name
         setup_map[instance_id]["docker_image"] = docker_image
+        setup_map[instance_id]["repo_full"] = repo_full
+        setup_map[instance_id]["version"] = version
+        
         # setup_map[instance_id]["pre_install"] = pre_install_cmds
         # setup_map[instance_id]["install"] = install_cmd
         # setup_map[instance_id]["test_cmd"] = test_cmd
