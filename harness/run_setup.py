@@ -267,13 +267,26 @@ def get_pr_link_for_task(task: Dict):
 
 
 def load_task_instances(swe_bench_tasks: str):
-    # for parquet version
-    df = pd.read_parquet(swe_bench_tasks, engine="pyarrow")
-    tasks = json.loads(df.to_json(orient="records"))
-    # now form a link to PR for each meta data entry
-    for t in tasks:
-        pr_link = get_pr_link_for_task(t)
-        t["pr_link"] = pr_link
+    if not os.path.exists(swe_bench_tasks):
+        raise ValueError("--swe_bench_tasks does not exist")
+    with open(swe_bench_tasks,"r") as f:
+        lines = f.readlines()
+        tasks = []
+        for line in lines:
+            task = json.loads(line)
+            tasks.append(task)
+    if not isinstance(tasks, list):
+        raise ValueError(f"{swe_bench_tasks} must contain an array of tasks")
+    return tasks
+
+
+    # # for parquet version
+    # df = pd.read_parquet(swe_bench_tasks, engine="pyarrow")
+    # tasks = json.loads(df.to_json(orient="records"))
+    # # now form a link to PR for each meta data entry
+    # for t in tasks:
+    #     pr_link = get_pr_link_for_task(t)
+    #     t["pr_link"] = pr_link
     # fields that are supposed to be list, are encoded as string in parquet
     # fix them here
     # for t in tasks:
@@ -421,7 +434,7 @@ if __name__ == "__main__":
     root_dir = os.path.dirname(script_dir)
     # we always read from this file, so put this as a default instead of required
     default_tasks_file = pjoin(
-        root_dir, "data", "train-00000-of-00001.parquet"
+        root_dir, "data", "top20_crates.parquet"
     )
 
     parser = argparse.ArgumentParser()
